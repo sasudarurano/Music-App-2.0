@@ -4,12 +4,12 @@ import 'package:music_app/models/song_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SongPlayerPage extends StatefulWidget {
-  final AudioPlayer audioPlayer;
+  final AudioPlayer audioPlayer; 
   final Song song;
 
   const SongPlayerPage({
     Key? key,
-    required this.audioPlayer,
+    required this.audioPlayer, 
     required this.song,
   }) : super(key: key);
 
@@ -28,8 +28,15 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
   }
 
   Future<void> _initAudioPlayer() async {
-    await widget.audioPlayer.setAsset(widget.song.audioPath);
-    await widget.audioPlayer.play();
+    try {
+      await widget.audioPlayer.setAsset(widget.song.audioPath);
+      // Ensure that any previous song is stopped before playing a new one
+      await widget.audioPlayer.stop(); 
+      await widget.audioPlayer.play(); 
+    } catch (e) {
+      // Handle any errors that occur during audio playback
+      print("Error loading audio: $e"); 
+    }
   }
 
   Future<void> _checkFavoriteStatus() async {
@@ -40,24 +47,21 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
   }
 
   Future<void> _toggleFavorite() async {
-  final prefs = await SharedPreferences.getInstance();
-  setState(() {
-    _isFavorite = !_isFavorite;
-    prefs.setBool(widget.song.title, _isFavorite);
-    if (_isFavorite) {
-      // Store song details when adding to favorites
-      prefs.setString('${widget.song.title}-artist', widget.song.artist);
-      prefs.setString('${widget.song.title}-imagePath', widget.song.imagePath);
-      prefs.setString('${widget.song.title}-audioPath', widget.song.audioPath);
-    } else {
-      // Remove song details when removing from favorites
-      prefs.remove('${widget.song.title}-artist');
-      prefs.remove('${widget.song.title}-imagePath');
-      prefs.remove('${widget.song.title}-audioPath');
-    }
-  });
-}
-
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isFavorite = !_isFavorite;
+      prefs.setBool(widget.song.title, _isFavorite);
+      if (_isFavorite) {
+        prefs.setString('${widget.song.title}-artist', widget.song.artist);
+        prefs.setString('${widget.song.title}-imagePath', widget.song.imagePath);
+        prefs.setString('${widget.song.title}-audioPath', widget.song.audioPath);
+      } else {
+        prefs.remove('${widget.song.title}-artist');
+        prefs.remove('${widget.song.title}-imagePath');
+        prefs.remove('${widget.song.title}-audioPath');
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
