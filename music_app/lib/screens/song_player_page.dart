@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart'; // Import GetX
 import 'package:just_audio/just_audio.dart';
 import 'package:music_app/models/song_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:music_app/controllers/songController.dart'; // Import SongController
 
 class SongPlayerPage extends StatefulWidget {
-  final AudioPlayer audioPlayer; 
+  final AudioPlayer audioPlayer;
+  final List<Song> songs;
   final Song song;
 
   const SongPlayerPage({
     Key? key,
-    required this.audioPlayer, 
+    required this.audioPlayer,
+    required this.songs,
     required this.song,
   }) : super(key: key);
 
@@ -18,11 +22,17 @@ class SongPlayerPage extends StatefulWidget {
 }
 
 class _SongPlayerPageState extends State<SongPlayerPage> {
+  // Use GetXController to manage the current song
+  final _songController = Get.put(SongController());
+
   bool _isFavorite = false;
+  int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.songs.indexOf(widget.song);
+    _songController.currentSong.value = widget.song; // Initialize current song
     _initAudioPlayer();
     _checkFavoriteStatus();
   }
@@ -30,12 +40,9 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
   Future<void> _initAudioPlayer() async {
     try {
       await widget.audioPlayer.setAsset(widget.song.audioPath);
-      // Ensure that any previous song is stopped before playing a new one
-      await widget.audioPlayer.stop(); 
-      await widget.audioPlayer.play(); 
+      await widget.audioPlayer.play();
     } catch (e) {
-      // Handle any errors that occur during audio playback
-      print("Error loading audio: $e"); 
+      print("Error loading audio: $e");
     }
   }
 
@@ -53,14 +60,43 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
       prefs.setBool(widget.song.title, _isFavorite);
       if (_isFavorite) {
         prefs.setString('${widget.song.title}-artist', widget.song.artist);
-        prefs.setString('${widget.song.title}-imagePath', widget.song.imagePath);
-        prefs.setString('${widget.song.title}-audioPath', widget.song.audioPath);
+        prefs.setString(
+            '${widget.song.title}-imagePath', widget.song.imagePath);
+        prefs.setString(
+            '${widget.song.title}-audioPath', widget.song.audioPath);
       } else {
         prefs.remove('${widget.song.title}-artist');
         prefs.remove('${widget.song.title}-imagePath');
         prefs.remove('${widget.song.title}-audioPath');
       }
     });
+  }
+
+  void _playPreviousSong() {
+    if (_currentIndex > 0) {
+      _currentIndex--;
+      _playSongAtIndex(_currentIndex);
+    }
+  }
+
+  void _playNextSong() {
+    if (_currentIndex < widget.songs.length - 1) {
+      _currentIndex++;
+      _playSongAtIndex(_currentIndex);
+    }
+  }
+
+  Future<void> _playSongAtIndex(int index) async {
+    final song = widget.songs[index];
+    try {
+      await widget.audioPlayer.stop();
+      await widget.audioPlayer.setAsset(song.audioPath);
+      await widget.audioPlayer.play();
+      _songController.currentSong.value =
+          song; // Update the current song in the controller
+    } catch (e) {
+      print("Error loading audio: $e");
+    }
   }
 
   @override
@@ -84,19 +120,23 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 100,
-            backgroundImage: AssetImage(widget.song.imagePath),
-          ),
+          // Use Obx to update the image when the song changes
+          Obx(() => CircleAvatar(
+                radius: 100,
+                backgroundImage:
+                    AssetImage(_songController.currentSong.value.imagePath),
+              )),
           const SizedBox(height: 32),
-          Text(
-            widget.song.title,
-            style: const TextStyle(fontSize: 24),
-          ),
-          Text(
-            widget.song.artist,
-            style: const TextStyle(fontSize: 18),
-          ),
+          // Use Obx to update the title when the song changes
+          Obx(() => Text(
+                _songController.currentSong.value.title,
+                style: const TextStyle(fontSize: 24),
+              )),
+          // Use Obx to update the artist when the song changes
+          Obx(() => Text(
+                _songController.currentSong.value.artist,
+                style: const TextStyle(fontSize: 18),
+              )),
           const SizedBox(height: 32),
           StreamBuilder<Duration>(
             stream: widget.audioPlayer.positionStream,
@@ -104,10 +144,12 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
               final position = snapshot.data ?? Duration.zero;
               return Slider(
                 min: 0.0,
-                max: widget.audioPlayer.duration?.inMilliseconds.toDouble() ?? 0.0,
+                max: widget.audioPlayer.duration?.inMilliseconds.toDouble() ??
+                    0.0,
                 value: position.inMilliseconds.toDouble(),
                 onChanged: (value) {
-                  widget.audioPlayer.seek(Duration(milliseconds: value.toInt()));
+                  widget.audioPlayer
+                      .seek(Duration(milliseconds: value.toInt()));
                 },
               );
             },
@@ -140,7 +182,7 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
             children: [
               IconButton(
                 icon: const Icon(Icons.skip_previous),
-                onPressed: () {}, 
+                onPressed: _playPreviousSong, // Call _playPreviousSong
               ),
               StreamBuilder<PlayerState>(
                 stream: widget.audioPlayer.playerStateStream,
@@ -174,7 +216,7 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
               ),
               IconButton(
                 icon: const Icon(Icons.skip_next),
-                onPressed: () {}, 
+                onPressed: _playNextSong, // Call _playNextSong
               ),
             ],
           ),
@@ -190,3 +232,4 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
     return '$twoDigitMinutes:$twoDigitSeconds';
   }
 }
+

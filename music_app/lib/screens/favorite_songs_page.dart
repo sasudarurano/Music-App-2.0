@@ -12,6 +12,7 @@ class FavoriteSongsPage extends StatefulWidget {
 }
 
 class _FavoriteSongsPageState extends State<FavoriteSongsPage> {
+  final audioPlayer = AudioPlayer();
   List<Song> favoriteSongs = [];
 
   @override
@@ -20,18 +21,27 @@ class _FavoriteSongsPageState extends State<FavoriteSongsPage> {
     _loadFavoriteSongs();
   }
 
+  @override
+  void dispose() {
+    audioPlayer.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadFavoriteSongs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final songTitles = prefs.getKeys().where((key) => !key.contains('-')).toList();
+      final songTitles =
+          prefs.getKeys().where((key) => !key.contains('-')).toList();
 
       setState(() {
         favoriteSongs = songTitles.map((title) => Song(
-          title: title,
-          artist: prefs.getString('$title-artist') ?? 'Unknown Artist',
-          imagePath: prefs.getString('$title-imagePath') ?? 'assets/images/default.png',
-          audioPath: prefs.getString('$title-audioPath') ?? 'assets/audio/default.mp3',
-        )).toList();
+              title: title,
+              artist: prefs.getString('$title-artist') ?? 'Unknown Artist',
+              imagePath: prefs.getString('$title-imagePath') ??
+                  'assets/images/default.png',
+              audioPath: prefs.getString('$title-audioPath') ??
+                  'assets/audio/default.mp3',
+            )).toList();
       });
     } catch (e) {
       print('Error loading favorite songs: $e');
@@ -71,14 +81,13 @@ class _FavoriteSongsPageState extends State<FavoriteSongsPage> {
                 _removeSongFromFavorites(song);
               },
             ),
-            // Add the onTap functionality here
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => SongPlayerPage(
-
-                    audioPlayer: AudioPlayer(), // Create a new AudioPlayer instance
+                    audioPlayer: audioPlayer,
+                    songs: favoriteSongs, // Pass the list of favorite songs
                     song: song,
                   ),
                 ),

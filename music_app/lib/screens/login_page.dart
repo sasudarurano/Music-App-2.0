@@ -13,12 +13,10 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  late User user; 
 
   @override
   void initState() {
     super.initState();
-    user = User(); // Inisialisasi objek User
     _checkLoginStatus();
   }
 
@@ -37,19 +35,24 @@ class _LoginPageState extends State<LoginPage> {
     final username = _usernameController.text;
     final password = _passwordController.text;
 
-    if (username == user.username && password == user.password) { 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('username', username);
+    // Iterasi list users dan gunakan checkCredential
+    for (var user in users) { 
+      if (user.checkCredential(username, password)) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('username', username);
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const SongListPage()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Username atau password salah')),
-      );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SongListPage()),
+        );
+        return; // Keluar dari loop setelah login berhasil
+      }
     }
+
+    // Jika tidak ada user yang cocok
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Username atau password salah')),
+    );
   }
 
   @override

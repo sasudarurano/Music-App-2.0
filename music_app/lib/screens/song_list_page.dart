@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'song_player_page.dart'; 
+import 'song_player_page.dart';
 import 'package:music_app/models/song_model.dart';
-import 'favorite_songs_page.dart'; 
-import 'profile_page.dart'; 
+import 'favorite_songs_page.dart';
+import 'profile_page.dart';
 
 class SongListPage extends StatefulWidget {
   const SongListPage({Key? key}) : super(key: key);
@@ -14,9 +14,9 @@ class SongListPage extends StatefulWidget {
 
 class _SongListPageState extends State<SongListPage> {
   final _audioPlayer = AudioPlayer();
-  List<Song> songs = []; 
-  Song? _currentSong; // Variabel untuk menyimpan lagu yang sedang diputar
-  bool _isPlaying = false; // Variabel untuk menyimpan status pemutaran
+  List<Song> songs = [];
+  Song? _currentSong;
+  bool _isPlaying = false;
 
   @override
   void initState() {
@@ -29,10 +29,16 @@ class _SongListPageState extends State<SongListPage> {
     setState(() {
       songs = [
         Song(
-          title: 'Lagu 1',
-          artist: 'Artis 1',
-          imagePath: 'assets/images/gambar1.jpeg', // Ganti dengan path gambar
-          audioPath: 'assets/audio/lagu1.mp3', // Ganti dengan path audio
+          title: 'ラブカ？ / konoco(cover)',
+          artist: 'konoco',
+          imagePath: 'assets/images/gambar1.jpeg',
+          audioPath: 'assets/audio/lagu11.mp3',
+        ),
+        Song(
+          title: 'KEEP UP (Keep up Im too fast Im too fast...) ( Slowed & Reverbed ) /// Pink Fox Lady ///',
+          artist: 'Odetari',
+          imagePath: 'assets/images/gambar2.jpeg',
+          audioPath: 'assets/audio/lagu2.mp3',
         ),
         // Tambahkan lagu lainnya di sini
       ];
@@ -93,13 +99,14 @@ class _SongListPageState extends State<SongListPage> {
                         MaterialPageRoute(
                           builder: (context) => SongPlayerPage(
                             audioPlayer: _audioPlayer,
+                            songs: songs, // Pass the list of songs here
                             song: song,
                           ),
                         ),
-                      ).then((_) { 
+                      ).then((_) {
                         setState(() {
-                          _currentSong = _audioPlayer.playing ? song : null; 
-                          _isPlaying = _audioPlayer.playing; 
+                          _currentSong = _audioPlayer.playing ? song : null;
+                          _isPlaying = _audioPlayer.playing;
                         });
                       });
                     },
@@ -109,7 +116,7 @@ class _SongListPageState extends State<SongListPage> {
             ),
           ),
           // Widget untuk menampilkan lagu yang sedang diputar
-          if (_currentSong != null) // Tampilkan widget ini jika ada lagu yang sedang diputar
+          if (_currentSong != null)
             Container(
               padding: const EdgeInsets.all(16.0),
               color: Colors.grey[300],
@@ -121,7 +128,8 @@ class _SongListPageState extends State<SongListPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_currentSong!.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(_currentSong!.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
                         Text(_currentSong!.artist),
                       ],
                     ),
