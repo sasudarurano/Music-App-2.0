@@ -34,22 +34,25 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
     _initAudioPlayer();
     _checkFavoriteStatus();
   }
-
-  Future<void> _initAudioPlayer() async {
-    try {
-      await widget.audioPlayer.setAsset(widget.song.audioPath);
-
-      // Set the initial position of the audioPlayer
-      final initialPosition = _songController.currentPosition.value;
-      if (initialPosition != null) {
-        await widget.audioPlayer.seek(initialPosition);
-      }
-
-      await widget.audioPlayer.play();
-    } catch (e) {
-      print("Error loading audio: $e");
+Future<void> _initAudioPlayer() async {
+  try {
+    await widget.audioPlayer.setAsset(widget.song.audioPath);
+    final initialPosition = _songController.currentPosition.value;
+    if (initialPosition != null) {
+      await widget.audioPlayer.seek(initialPosition);
     }
+    await widget.audioPlayer.play();
+
+    // Tambahkan listener untuk mendeteksi akhir lagu
+    widget.audioPlayer.processingStateStream.listen((state) {
+      if (state == ProcessingState.completed) {
+        _playNextSong();
+      }
+    });
+  } catch (e) {
+    print("Error loading audio: $e");
   }
+}
 
   Future<void> _checkFavoriteStatus() async {
     final prefs = await SharedPreferences.getInstance();
@@ -84,12 +87,14 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
     }
   }
 
-  void _playNextSong() {
-    if (_currentIndex < widget.songs.length - 1) {
-      _currentIndex++;
-      _playSongAtIndex(_currentIndex);
-    }
+ void _playNextSong() {
+  if (_currentIndex < widget.songs.length - 1) {
+    _currentIndex++;
+  } else {
+    _currentIndex = 0; // Ulangi dari lagu pertama
   }
+  _playSongAtIndex(_currentIndex);
+}
 
   Future<void> _playSongAtIndex(int index) async {
     final song = widget.songs[index];

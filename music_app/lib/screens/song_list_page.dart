@@ -6,6 +6,8 @@ import 'package:music_app/models/song_model.dart';
 import 'favorite_songs_page.dart';
 import 'profile_page.dart';
 import 'package:music_app/controllers/songController.dart';
+import 'favorite_songs_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SongListPage extends StatefulWidget {
   const SongListPage({Key? key}) : super(key: key);
@@ -43,8 +45,7 @@ class _SongListPageState extends State<SongListPage> {
           audioPath: 'assets/audio/lagu11.mp3',
         ),
         Song(
-          title:
-              'KEEP UP (Keep up Im too fast Im too fast...) ( Slowed & Reverbed ) /// Pink Fox Lady ///',
+          title: 'KEEP UP (Slowed & Reverbed)',
           artist: 'Odetari',
           imagePath: 'assets/images/gambar2.jpeg',
           audioPath: 'assets/audio/lagu2.mp3',
@@ -56,28 +57,28 @@ class _SongListPageState extends State<SongListPage> {
           audioPath: 'assets/audio/derniere.mp3',
         ),
         Song(
-          title: 'stephanie poetri - i love you 3000 (slowed down)',
-          artist: 'stephanie poetri',
+          title: 'Stephanie Poetri - I Love You 3000 (Slowed Down)',
+          artist: 'Stephanie Poetri',
           imagePath: 'assets/images/🎀follow me!.jpeg',
           audioPath: 'assets/audio/i3000.mp3',
         ),
         Song(
-          title: 'SoapSkin  Me and the Devil SLOWED  TIKTOK Version',
+          title: 'Soap&Skin - Me and the Devil (SLOWED)',
           artist: 'Soap&Skin',
           imagePath: 'assets/images/download (16).jpeg',
           audioPath: 'assets/audio/mendevil.mp3',
         ),
         Song(
-          title: 'VAPO NO SETOR (BASHAME VERSION)',
+          title: 'Vapo No Setor (Bashame Version)',
           artist: 'Bashame',
           imagePath: 'assets/images/bashame.jpeg',
-          audioPath: 'assets/audio/utomp3.com - VAPO NO SETOR BASHAME VERSION.mp3',
+          audioPath: 'assets/audio/vapo.mp3',
         ),
         Song(
-          title: ' ENGLISH COVER Love Me Love Me Love Me Nerissa Ravencroft',
+          title: 'Love Me Love Me Love Me (English Cover)',
           artist: 'Nerissa Ravencroft',
           imagePath: 'assets/images/𝘯𝘦𝘳𝘪𝘴𝘴𝘢 𝘳𝘢𝘷𝘦𝘯𝘤𝘳𝘰𝘧𝘵_.jpeg',
-          audioPath: 'assets/audio/utomp3.com - ENGLISH COVERLove Me Love Me Love Me Nerissa Ravencroft.mp3',
+          audioPath: 'assets/audio/love_me.mp3',
         ),
       ];
       displayedSongs = List.from(songs);
@@ -95,7 +96,7 @@ class _SongListPageState extends State<SongListPage> {
     final currentIndex = songs.indexOf(_songController.currentSong.value);
     if (currentIndex != -1) {
       _scrollController.animateTo(
-        currentIndex * 72.0, // Adjust this value if needed
+        currentIndex * 72.0,
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
@@ -131,7 +132,8 @@ class _SongListPageState extends State<SongListPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const FavoriteSongsPage()),
+                  builder: (context) => const FavoriteSongsPage(),
+                ),
               );
             },
           ),
@@ -140,7 +142,9 @@ class _SongListPageState extends State<SongListPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ProfilePage()),
+                MaterialPageRoute(
+                  builder: (context) => const ProfilePage(),
+                ),
               );
             },
           ),
@@ -179,7 +183,8 @@ class _SongListPageState extends State<SongListPage> {
                       await _songController.audioPlayer.stop();
                       _songController.currentSong.value = song;
                       await _songController.audioPlayer.setAudioSource(
-                          AudioSource.asset(song.audioPath));
+                        AudioSource.asset(song.audioPath),
+                      );
                     }
                     _songController.isPlaying.value = true;
                     _songController.audioPlayer.play();
@@ -216,6 +221,8 @@ class _SongListPageState extends State<SongListPage> {
                             children: [
                               Text(
                                 song.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
@@ -223,6 +230,8 @@ class _SongListPageState extends State<SongListPage> {
                               ),
                               Text(
                                 song.artist,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ],
@@ -236,66 +245,99 @@ class _SongListPageState extends State<SongListPage> {
             ),
           ),
           Obx(() {
-            if (_songController.currentSong.value.title.isNotEmpty) {
-              return GestureDetector(
-                onTap: () {
-                  _scrollToCurrentSong();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SongPlayerPage(
-                        audioPlayer: _songController.audioPlayer,
-                        songs: songs,
-                        song: _songController.currentSong.value,
-                      ),
-                    ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  color: Colors.grey[300],
-                  child: Row(
+            final currentSong = _songController.currentSong.value;
+            return Container(
+              padding: const EdgeInsets.all(8.0),
+              color: Colors.grey.shade200,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
                     children: [
-                      Image.asset(
-                        _songController.currentSong.value.imagePath,
-                        width: 50,
-                        height: 50,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image.asset(
+                          currentSong.imagePath,
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                      const SizedBox(width: 16.0),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(_songController.currentSong.value.title,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold)),
-                            Text(_songController.currentSong.value.artist),
+                            Text(
+                              currentSong.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              currentSong.artist,
+                              style: const TextStyle(fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ],
                         ),
                       ),
                       IconButton(
-                        icon: Obx(() => Icon(_songController.isPlaying.value
-                            ? Icons.pause
-                            : Icons.play_arrow)),
+                        icon: const Icon(Icons.skip_previous),
                         onPressed: () {
-                          _songController.isPlaying.value
-                              ? _songController.audioPlayer.pause()
-                              : _songController.audioPlayer.play();
+                          _playPreviousSong();
                         },
                       ),
-                      // Display the current position
-                      Obx(() => Text(
-                            _formatDuration(_songController
-                                    .currentPosition.value ??
-                                Duration.zero),
-                          )),
+                      IconButton(
+                        icon: Icon(
+                          _songController.isPlaying.value
+                              ? Icons.pause
+                              : Icons.play_arrow,
+                        ),
+                        onPressed: () {
+                          if (_songController.isPlaying.value) {
+                            _songController.pauseSong();
+                          } else {
+                            _songController.resumeSong();
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.skip_next),
+                        onPressed: () {
+                          _playNextSong();
+                        },
+                      ),
                     ],
                   ),
-                ),
-              );
-            } else {
-              return const SizedBox.shrink();
-            }
+                  Obx(() {
+                    final position = _songController.currentPosition.value;
+                    final duration = _songController.audioPlayer.duration ?? Duration.zero;
+                    return Column(
+                      children: [
+                        Slider(
+                          value: position.inSeconds.toDouble(),
+                          max: duration.inSeconds.toDouble(),
+                          onChanged: (value) {
+                            _songController.seekTo(Duration(seconds: value.toInt()));
+                          },
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(_formatDuration(position)),
+                            Text(_formatDuration(duration)),
+                          ],
+                        ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+            );
           }),
         ],
       ),
@@ -303,9 +345,44 @@ class _SongListPageState extends State<SongListPage> {
   }
 
   String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    final twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$twoDigitMinutes:$twoDigitSeconds';
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  void _playPreviousSong() {
+    final currentIndex = songs.indexOf(_songController.currentSong.value);
+    if (currentIndex > 0) {
+      final previousSong = songs[currentIndex - 1];
+      _songController.playSong(previousSong);
+      _scrollToCurrentSong(); 
+    }
+  }
+
+
+  void _playNextSong() {
+    final currentIndex = songs.indexOf(_songController.currentSong.value);
+    if (currentIndex < songs.length - 1) {
+      final nextSong = songs[currentIndex + 1];
+      _songController.playSong(nextSong);
+      _scrollToCurrentSong(); 
+    }
+  }
+
+  Future<void> _toggleFavorite(Song song) async {
+    final prefs = await SharedPreferences.getInstance();
+    final isFavorite = prefs.getBool(song.title) ?? false;
+    setState(() {
+      prefs.setBool(song.title, !isFavorite);
+      if (!isFavorite) {
+        prefs.setString('${song.title}-artist', song.artist);
+        prefs.setString('${song.title}-imagePath', song.imagePath);
+        prefs.setString('${song.title}-audioPath', song.audioPath);
+      } else {
+        prefs.remove('${song.title}-artist');
+        prefs.remove('${song.title}-imagePath');
+        prefs.remove('${song.title}-audioPath');
+      }
+    });
   }
 }
