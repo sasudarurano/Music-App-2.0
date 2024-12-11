@@ -1,6 +1,6 @@
 name: music_app
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: 'none' 
 version: 1.0.0+1
 
 environment:
@@ -17,6 +17,16 @@ dependencies:
   google_fonts: ^3.0.1
   http: ^0.13.5
   get: ^4.6.5 
+  flutter_native_splash: ^2.2.4
+
+flutter_native_splash:
+  android: true
+  ios: true
+  web: true
+
+  background_image: "assets/1114.jpeg"  # Choose either color or background_image
+  image: "assets/1113.png" 
+  ios_content_mode: scaleAspectFill 
 
 dev_dependencies:
   flutter_test:
@@ -30,3 +40,9 @@ flutter:
   assets:
     - assets/images/
     - assets/audio/
+    - assets/icon/
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"

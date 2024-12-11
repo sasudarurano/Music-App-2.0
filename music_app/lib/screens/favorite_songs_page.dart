@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:music_app/controllers/songController.dart';
 import 'package:music_app/models/song_model.dart';
+import 'package:music_app/screens/song_player_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:music_app/screens/song_player_page.dart'; // Import for SongPlayerPage
-import 'package:just_audio/just_audio.dart'; // Import for AudioPlayer
 
 class FavoriteSongsPage extends StatefulWidget {
   const FavoriteSongsPage({Key? key}) : super(key: key);
@@ -12,19 +13,13 @@ class FavoriteSongsPage extends StatefulWidget {
 }
 
 class _FavoriteSongsPageState extends State<FavoriteSongsPage> {
-  final audioPlayer = AudioPlayer();
+  final _songController = Get.find<SongController>();
   List<Song> favoriteSongs = [];
 
   @override
   void initState() {
     super.initState();
     _loadFavoriteSongs();
-  }
-
-  @override
-  void dispose() {
-    audioPlayer.dispose();
-    super.dispose();
   }
 
   Future<void> _loadFavoriteSongs() async {
@@ -45,7 +40,6 @@ class _FavoriteSongsPageState extends State<FavoriteSongsPage> {
       });
     } catch (e) {
       print('Error loading favorite songs: $e');
-      // Consider showing a SnackBar or a dialog to inform the user
     }
   }
 
@@ -56,9 +50,24 @@ class _FavoriteSongsPageState extends State<FavoriteSongsPage> {
     await prefs.remove('${song.title}-imagePath');
     await prefs.remove('${song.title}-audioPath');
 
+    // Remove the song from the controller if it's the current song
+    if (_songController.currentSong.value.title == song.title) {
+      _songController.currentSong.value = Song(
+        title: '',
+        artist: '',
+        imagePath: '',
+        audioPath: '',
+      );
+    }
+
     setState(() {
       favoriteSongs.remove(song);
     });
+
+    // Show a SnackBar to confirm removal
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${song.title} removed from favorites.')),
+    );
   }
 
   @override
@@ -77,17 +86,17 @@ class _FavoriteSongsPageState extends State<FavoriteSongsPage> {
             subtitle: Text(song.artist),
             trailing: IconButton(
               icon: const Icon(Icons.favorite, color: Colors.red),
-              onPressed: () {
-                _removeSongFromFavorites(song);
-              },
+              onPressed: () => _removeSongFromFavorites(song),
             ),
             onTap: () {
+              _songController.currentSong.value = song;
+              _songController.isPlaying.value = true;
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => SongPlayerPage(
-                    audioPlayer: audioPlayer,
-                    songs: favoriteSongs, // Pass the list of favorite songs
+                    audioPlayer: _songController.audioPlayer,
+                    songs: favoriteSongs,
                     song: song,
                   ),
                 ),
