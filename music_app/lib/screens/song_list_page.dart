@@ -6,8 +6,7 @@ import 'package:music_app/models/song_model.dart';
 import 'favorite_songs_page.dart';
 import 'profile_page.dart';
 import 'package:music_app/controllers/songController.dart';
-import 'favorite_songs_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:music_app/data/song_data.dart';
 
 class SongListPage extends StatefulWidget {
   const SongListPage({Key? key}) : super(key: key);
@@ -19,69 +18,17 @@ class SongListPage extends StatefulWidget {
 class _SongListPageState extends State<SongListPage> {
   final _songController = Get.put(SongController());
   final _scrollController = ScrollController();
-  List<Song> songs = [];
-  List<Song> displayedSongs = [];
+  List<Song> displayedSongs = List.from(songs); // Initialize with songs from song_data.dart
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _loadSongs();
     _songController.audioPlayer.playerStateStream.listen((playerState) {
       _songController.isPlaying.value = playerState.playing;
     });
     _songController.audioPlayer.positionStream.listen((position) {
       _songController.currentPosition.value = position;
-    });
-  }
-
-  Future<void> _loadSongs() async {
-    setState(() {
-      songs = [
-        Song(
-          title: 'ラブカ？ / konoco(cover)',
-          artist: 'konoco',
-          imagePath: 'assets/images/gambar1.jpeg',
-          audioPath: 'assets/audio/lagu11.mp3',
-        ),
-        Song(
-          title: 'KEEP UP (Slowed & Reverbed)',
-          artist: 'Odetari',
-          imagePath: 'assets/images/gambar2.jpeg',
-          audioPath: 'assets/audio/lagu2.mp3',
-        ),
-        Song(
-          title: 'Indila - Dernière Danse (SLOWED + Reverb)',
-          artist: 'Indila',
-          imagePath: 'assets/images/download (15).jpeg',
-          audioPath: 'assets/audio/derniere.mp3',
-        ),
-        Song(
-          title: 'Stephanie Poetri - I Love You 3000 (Slowed Down)',
-          artist: 'Stephanie Poetri',
-          imagePath: 'assets/images/🎀follow me!.jpeg',
-          audioPath: 'assets/audio/i3000.mp3',
-        ),
-        Song(
-          title: 'Soap&Skin - Me and the Devil (SLOWED)',
-          artist: 'Soap&Skin',
-          imagePath: 'assets/images/download (16).jpeg',
-          audioPath: 'assets/audio/mendevil.mp3',
-        ),
-        Song(
-          title: 'Vapo No Setor (Bashame Version)',
-          artist: 'Bashame',
-          imagePath: 'assets/images/bashame.jpeg',
-          audioPath: 'assets/audio/vapo.mp3',
-        ),
-        Song(
-          title: 'Love Me Love Me Love Me (English Cover)',
-          artist: 'Nerissa Ravencroft',
-          imagePath: 'assets/images/𝘯𝘦𝘳𝘪𝘴𝘴𝘢 𝘳𝘢𝘷𝘦𝘯𝘤𝘳𝘰𝘧𝘵_.jpeg',
-          audioPath: 'assets/audio/love_me.mp3',
-        ),
-      ];
-      displayedSongs = List.from(songs);
     });
   }
 
@@ -193,7 +140,7 @@ class _SongListPageState extends State<SongListPage> {
                       MaterialPageRoute(
                         builder: (context) => SongPlayerPage(
                           audioPlayer: _songController.audioPlayer,
-                          songs: songs,
+                          songs: songs, 
                           song: song,
                         ),
                       ),
@@ -367,22 +314,5 @@ class _SongListPageState extends State<SongListPage> {
       _songController.playSong(nextSong);
       _scrollToCurrentSong(); 
     }
-  }
-
-  Future<void> _toggleFavorite(Song song) async {
-    final prefs = await SharedPreferences.getInstance();
-    final isFavorite = prefs.getBool(song.title) ?? false;
-    setState(() {
-      prefs.setBool(song.title, !isFavorite);
-      if (!isFavorite) {
-        prefs.setString('${song.title}-artist', song.artist);
-        prefs.setString('${song.title}-imagePath', song.imagePath);
-        prefs.setString('${song.title}-audioPath', song.audioPath);
-      } else {
-        prefs.remove('${song.title}-artist');
-        prefs.remove('${song.title}-imagePath');
-        prefs.remove('${song.title}-audioPath');
-      }
-    });
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_app/screens/login_page.dart'; 
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:get/get.dart';
 
 
 void main() async {

@@ -63,7 +63,7 @@ class _LoginPageState extends State<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [const Color.fromARGB(255, 2, 40, 71)!, const Color.fromARGB(255, 75, 2, 149)!],
+            colors: [const Color.fromARGB(255, 2, 40, 71), const Color.fromARGB(255, 75, 2, 149)],
           ),
         ),
         child: Center(

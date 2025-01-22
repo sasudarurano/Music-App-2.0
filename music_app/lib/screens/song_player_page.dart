@@ -38,10 +38,8 @@ Future<void> _initAudioPlayer() async {
   try {
     await widget.audioPlayer.setAsset(widget.song.audioPath);
     final initialPosition = _songController.currentPosition.value;
-    if (initialPosition != null) {
-      await widget.audioPlayer.seek(initialPosition);
-    }
-    await widget.audioPlayer.play();
+    await widget.audioPlayer.seek(initialPosition);
+      await widget.audioPlayer.play();
 
     // Tambahkan listener untuk mendeteksi akhir lagu
     widget.audioPlayer.processingStateStream.listen((state) {
